@@ -3,7 +3,6 @@
 
 #define _CRT_SECURE_NO_WARNINGS
 
-#include <stdlib.h> //malloc(), realloc(), free()
 #include <string.h> //strcpy(), strlen()
 
 template<typename T>
@@ -74,17 +73,17 @@ Matrix<T>::~Matrix()
 	for (int i = 0; i < size; i++)
 	{
 		if (values[i])
-			free(values[i]);
+			delete values[i];
 
 		if (labels[i])
-			free(labels[i]);
+			delete[] labels[i];
 	}
 
 	if (values)
-		free(values);
+		delete[] values;
 
 	if (labels)
-		free(labels);
+		delete[] labels;
 
 	Zero();
 }
@@ -96,9 +95,10 @@ void Matrix<T>::Assign(int size, char ** labels)
 
 	for (int i = 0; i < size; i++)
 	{
-		this->labels[i] = (char *)malloc(strlen(labels[i]) + 1);
+		this->labels[i] = new char[strlen(labels[i]) + 1];
 		strcpy(this->labels[i], labels[i]);
-		this->values[i] = (T*)malloc(sizeof(T));
+
+		this->values[i] = new T;
 		memset(this->values[i], 0, sizeof(T));
 	}
 }
@@ -135,17 +135,19 @@ T& Matrix<T>::operator[] (int index)
 template<typename T>
 Matrix<T>& Matrix<T>::operator=(const Matrix<T>& matrix)
 {
+	this->~Matrix();
+
 	size = matrix.size;
 
-	labels = (char **)realloc(labels, size * sizeof(char *));
-	values = (T**)realloc(values, size * sizeof(T*));
+	labels = new char*[size];
+	values = new T*[size];
 
 	for (int i = 0; i < size; i++)
 	{
-		labels[i] = (char *)malloc(strlen(matrix.labels[i]) + 1);
+		labels[i] = new char[strlen(matrix.labels[i]) + 1];
 		strcpy(labels[i], matrix.labels[i]);
 
-		values[i] = (T*)malloc(sizeof(T));
+		values[i] = new T;
 		memset(values[i], 0, sizeof(T));
 
 		*values[i] = *matrix.values[i];
@@ -170,9 +172,10 @@ void Matrix<T>::Allocate(int size)
 	if (this->size != 0)
 		this->~Matrix();
 
-	values = (T**)malloc(size * sizeof(T*));
+	values = new T*[size];
 	memset(values, 0, size * sizeof(T*));
-	labels = (char **)malloc(size * sizeof(char *));
+
+	labels = new char*[size];
 	memset(labels, 0, size * sizeof(char *));
 	
 	this->size = size;

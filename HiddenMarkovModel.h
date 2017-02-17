@@ -71,12 +71,13 @@ char ** HiddenMarkovModel::Viterbi(char ** observationSequence, int nObservation
 				Delta[k][j] = max * this->Emission[j][observationSequence[k]];
 			}
 	//Termination
-	double max = 0; char ** q = (char **)malloc(nObservationSequence * sizeof(char *));
+	double max = 0; char ** q = new char*[nObservationSequence]; memset(q, NULL, nObservationSequence * sizeof(char *));
 	for (int i = 0; i < nStates; i++)
 		if (Delta[nObservationSequence - 1][i] > max)
 		{
 			max = Delta[nObservationSequence - 1][i];
-			q[nObservationSequence - 1] = (char *)malloc(strlen(States[i]) + 1);
+			delete[] q[nObservationSequence - 1];
+			q[nObservationSequence - 1] = new char[strlen(States[i]) + 1];
 			strcpy(q[nObservationSequence - 1], States[i]);
 		}
 	//Back-Tracking
@@ -89,7 +90,8 @@ char ** HiddenMarkovModel::Viterbi(char ** observationSequence, int nObservation
 			if (possibleMax > max)
 			{
 				max = possibleMax;
-				q[k] = (char *)malloc(strlen(States[i]) + 1);
+				delete[] q[k];
+				q[k] = new char[strlen(States[i]) + 1];
 				strcpy(q[k], States[i]);
 			}
 		}
@@ -102,7 +104,9 @@ double HiddenMarkovModel::Forward(char ** observationSequence, int nObservationS
 {
 	Matrix2D Alpha;
 
-	return Forward(observationSequence, nObservationSequence, &Alpha);
+	double result = Forward(observationSequence, nObservationSequence, &Alpha);
+	
+	return result;
 }
 double HiddenMarkovModel::Forward(char ** observationSequence, int nObservationSequence, Matrix2D * Alpha)
 {
@@ -131,7 +135,9 @@ double HiddenMarkovModel::Backward(char ** observationSequence, int nObservation
 {
 	Matrix2D Beta;
 
-	return Backward(observationSequence, nObservationSequence, &Beta);
+	double result = Backward(observationSequence, nObservationSequence, &Beta);
+	
+	return result;
 }
 double HiddenMarkovModel::Backward(char ** observationSequence, int nObservationSequence, Matrix2D * Beta)
 {
@@ -158,7 +164,9 @@ double HiddenMarkovModel::Backward(char ** observationSequence, int nObservation
 
 char ** HiddenMarkovModel::Posterior(char ** observationSequence, int nObservationSequence)
 {
-	char ** output = (char **)malloc(nObservationSequence * sizeof(char *)); Matrix2D Alpha, Beta;
+	char ** output = new char*[nObservationSequence];
+	Matrix2D Alpha, Beta;
+
 	//Initialization
 	double probabilityOfObservationSequence = Forward(observationSequence, nObservationSequence, &Alpha);
 	Backward(observationSequence, nObservationSequence, &Beta);
@@ -172,15 +180,16 @@ char ** HiddenMarkovModel::Posterior(char ** observationSequence, int nObservati
 			if (possibleMax > max)
 			{
 				max = possibleMax;
-				arg = (char *)realloc(arg, strlen(States[i]) + 1);
+				delete[] arg;
+				arg = new char[strlen(States[i]) + 1];
 				strcpy(arg, States[i]);
 			}
 		}
-		output[k] = (char *)malloc(strlen(arg) + 1);
+		output[k] = new char[strlen(arg) + 1];
 		strcpy(output[k], arg);
-		free(arg);
+		delete[] arg;
 	}
-
+	
 	return output;
 }
 
@@ -201,7 +210,7 @@ void HiddenMarkovModel::BaumWelch(char ** observationSequence, int nObservationS
 	for (int k = 0; k < nObservationSequence; k++)
 		for (int i = 0; i < nStates; i++)
 			Gamma[k][i] = (Alpha[k][i] * Beta[k][i]) / probabilityOfObservationSequence;
-
+	
 	//Estimate Initial
 	double sum = 0;
 	for (int i = 0; i < nStates; i++)
