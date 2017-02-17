@@ -3,9 +3,8 @@
 
 #define _CRT_SECURE_NO_WARNINGS
 
-#include <stdlib.h>
-#include <string.h>
-
+#include <stdlib.h> //malloc(), realloc(), free()
+#include <string.h> //strcpy(), strlen()
 
 template<typename T>
 class Matrix
