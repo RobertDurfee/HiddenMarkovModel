@@ -1,7 +1,7 @@
 #ifndef HIDDEN_MARKOV_MODEL_HEADER
 #define HIDDEN_MARKOV_MODEL_HEADER
 
-#include "Matrices.h"
+#include "Matrices.h" //Matrix1D, Matrix2D, MATRIX1D(), MATRIX2D()
 
 #define HIDDEN_MARKOV_MODEL_INITIAL_MATRIX 0x1
 #define HIDDEN_MARKOV_MODEL_EMISSION_MATRIX 0x2
