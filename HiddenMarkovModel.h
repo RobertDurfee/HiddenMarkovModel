@@ -2,11 +2,6 @@
 #define HIDDEN_MARKOV_MODEL_HEADER
 
 #include "Matrices.h"
-#include <vector>
-#include <string>
-#include <iomanip>
-#include <random>
-#include <chrono>
 
 #define HIDDEN_MARKOV_MODEL_INITIAL_MATRIX 0x1
 #define HIDDEN_MARKOV_MODEL_EMISSION_MATRIX 0x2
@@ -17,22 +12,22 @@ using namespace std;
 class HiddenMarkovModel
 {
 public:
-	HiddenMarkovModel(vector<string> states, vector<string> observations)
+	HiddenMarkovModel(char ** states, int nStates, char ** observations, int nObservations)
 	{
 		this->States = states;
+		this->nStates = nStates;
 		this->Observations = observations;
-		this->Initial.Assign(this->States.size(), this->States);
-		this->Emission.Assign(this->States.size(), this->Observations.size(), this->States, this->Observations);
-		this->Transition.Assign(this->States.size(), this->States.size(), this->States, this->States);
+		this->nObservations = nObservations;
+		this->Initial = MATRIX1D(nStates, this->States);
+		this->Emission = MATRIX2D(nStates, nObservations, this->States, this->Observations);
+		this->Transition = MATRIX2D(nStates, nStates, this->States, this->States);
 	}
-	vector<string> Viterbi(vector<string> observationSequence)
+	char ** Viterbi(char ** observationSequence, int nObservationSequence)
 	{
-		vector<string> output;
+		Matrix2D Delta = MATRIX2D(nObservationSequence, nStates, observationSequence, States);
 
-		Matrix2D<double> Delta(observationSequence.size(), this->States.size(), observationSequence, this->States);
-
-		for (int k = 0; k < (int)observationSequence.size(); k++)
-			for (int j = 0; j < (int)this->States.size(); j++)
+		for (int k = 0; k < nObservationSequence; k++)
+			for (int j = 0; j < nStates; j++)
 				//Initialization
 				if (k == 0)
 					Delta[k][j] = this->Initial[j] * this->Emission[j][observationSequence[k]];
@@ -40,7 +35,7 @@ public:
 				else
 				{
 					double max = 0;
-					for (int i = 0; i < (int)this->States.size(); i++)
+					for (int i = 0; i < nStates; i++)
 					{
 						double possibleMax = Delta[k - 1][i] * this->Transition[i][j];
 						if (possibleMax > max)
@@ -49,39 +44,38 @@ public:
 					Delta[k][j] = max * this->Emission[j][observationSequence[k]];
 				}
 		//Termination
-		double max = 0; string * q = new string[observationSequence.size()];
-		for (int i = 0; i < (int)this->States.size(); i++)
-			if (Delta[observationSequence.size() - 1][i] > max)
+		double max = 0; char ** q = (char **)malloc(nObservationSequence * sizeof(char *));
+		for (int i = 0; i < nStates; i++)
+			if (Delta[nObservationSequence - 1][i] > max)
 			{
-				max = Delta[observationSequence.size() - 1][i];
-				q[observationSequence.size() - 1] = this->States[i];
+				max = Delta[nObservationSequence - 1][i];
+				q[nObservationSequence - 1] = (char *)malloc(strlen(States[i]) + 1);
+				strcpy(q[nObservationSequence - 1], States[i]);
 			}
 		//Back-Tracking
-		for (int k = (int)observationSequence.size() - 2; k >= 0; k--)
+		for (int k = nObservationSequence - 2; k >= 0; k--)
 		{
 			double max = 0;
-			for (int i = 0; i < (int)this->States.size(); i++)
+			for (int i = 0; i < nStates; i++)
 			{
 				double possibleMax = Delta[k][i] * this->Transition[i][q[k + 1]];
 				if (possibleMax > max)
 				{
 					max = possibleMax;
-					q[k] = this->States[i];
+					q[k] = (char *)malloc(strlen(States[i]) + 1);
+					strcpy(q[k], States[i]);
 				}
 			}
 		}
-
-		for (int i = 0; i < (int)observationSequence.size(); i++)
-			output.push_back(q[i]);
-		delete[] q;
-		return output;
+		
+		return q;
 	}
-	double Forward(vector<string> observationSequence)
+	double Forward(char ** observationSequence, int nObservationSequence)
 	{
-		Matrix2D<double> Alpha(observationSequence.size(), this->States.size(), observationSequence, this->States);
+		Matrix2D Alpha = MATRIX2D(nObservationSequence, nStates, observationSequence, States);
 
-		for (int k = 0; k < (int)observationSequence.size(); k++)
-			for (int j = 0; j < (int)this->States.size(); j++)
+		for (int k = 0; k < nObservationSequence; k++)
+			for (int j = 0; j < nStates; j++)
 				//Initialization
 				if (k == 0)
 					Alpha[k][j] = this->Initial[j] * this->Emission[j][observationSequence[k]];
@@ -89,21 +83,21 @@ public:
 				else
 				{
 					double sum = 0;
-					for (int i = 0; i < (int)this->States.size(); i++)	sum += Alpha[k - 1][i] * this->Transition[i][j];
+					for (int i = 0; i < nStates; i++)	sum += Alpha[k - 1][i] * this->Transition[i][j];
 					Alpha[k][j] = sum * this->Emission[j][observationSequence[k]];
 				}
 		//Termination
 		double sum = 0;
-		for (int i = 0; i < (int)this->States.size(); i++) sum += Alpha[observationSequence.size() - 1][i];
+		for (int i = 0; i < nStates; i++) sum += Alpha[nObservationSequence - 1][i];
 
 		return sum;
 	}
-	double Forward(vector<string> observationSequence, Matrix2D<double> * Alpha)
+	double Forward(char ** observationSequence, int nObservationSequence, Matrix2D * Alpha)
 	{
-		Alpha->Assign(observationSequence.size(), this->States.size(), observationSequence, this->States);
+		*Alpha = MATRIX2D(nObservationSequence, nStates, observationSequence, States);
 
-		for (int k = 0; k < (int)observationSequence.size(); k++)
-			for (int j = 0; j < (int)this->States.size(); j++)
+		for (int k = 0; k < nObservationSequence; k++)
+			for (int j = 0; j < nStates; j++)
 				//Initialization
 				if (k == 0)
 					(*Alpha)[k][j] = this->Initial[j] * this->Emission[j][observationSequence[k]];
@@ -111,212 +105,171 @@ public:
 				else
 				{
 					double sum = 0;
-					for (int i = 0; i < (int)this->States.size(); i++)	sum += (*Alpha)[k - 1][i] * this->Transition[i][j];
+					for (int i = 0; i < nStates; i++)	sum += (*Alpha)[k - 1][i] * this->Transition[i][j];
 					(*Alpha)[k][j] = sum * this->Emission[j][observationSequence[k]];
 				}
 		//Termination
 		double sum = 0;
-		for (int i = 0; i < (int)this->States.size(); i++) sum += (*Alpha)[observationSequence.size() - 1][i];
+		for (int i = 0; i < nStates; i++) sum += (*Alpha)[nObservationSequence - 1][i];
 
 		return sum;
 	}
-	double Backward(vector<string> observationSequence)
+	double Backward(char ** observationSequence, int nObservationSequence)
 	{
-		Matrix2D<double> Beta(observationSequence.size(), this->States.size(), observationSequence, this->States);
+		Matrix2D Beta = MATRIX2D(nObservationSequence, nStates, observationSequence, States);
 
-		for (int k = observationSequence.size() - 1; k >= 0; k--)
-			for (int i = 0; i < (int)this->States.size(); i++)
+		for (int k = nObservationSequence  - 1; k >= 0; k--)
+			for (int i = 0; i < nStates; i++)
 				//Initialization
-				if (k == observationSequence.size() - 1)
+				if (k == nObservationSequence - 1)
 					Beta[k][i] = 1;
 				//Recursion
 				else
 				{
 					double sum = 0;
-					for (int j = 0; j < (int)this->States.size(); j++) sum += this->Transition[i][j] * this->Emission[j][observationSequence[k + 1]] * Beta[k + 1][j];
+					for (int j = 0; j < nStates; j++) sum += this->Transition[i][j] * this->Emission[j][observationSequence[k + 1]] * Beta[k + 1][j];
 					Beta[k][i] = sum;
 				}
 		//Termination
 		double sum = 0;
-		for (int i = 0; i < (int)this->States.size(); i++) sum += this->Initial[i] * this->Emission[i][observationSequence[0]] * Beta[0][i];
+		for (int i = 0; i < nStates; i++) sum += this->Initial[i] * this->Emission[i][observationSequence[0]] * Beta[0][i];
 
 		return sum;
 	}
-	double Backward(vector<string> observationSequence, Matrix2D<double> * Beta)
+	double Backward(char ** observationSequence, int nObservationSequence, Matrix2D * Beta)
 	{
-		Beta->Assign(observationSequence.size(), this->States.size(), observationSequence, this->States);
+		*Beta = MATRIX2D(nObservationSequence, nStates, observationSequence, States);
 
-		for (int k = observationSequence.size() - 1; k >= 0; k--)
-			for (int i = 0; i < (int)this->States.size(); i++)
+		for (int k = nObservationSequence - 1; k >= 0; k--)
+			for (int i = 0; i < nStates; i++)
 				//Initialization
-				if (k == observationSequence.size() - 1)
+				if (k == nObservationSequence - 1)
 					(*Beta)[k][i] = 1;
 				//Recursion
 				else
 				{
 					double sum = 0;
-					for (int j = 0; j < (int)this->States.size(); j++) sum += this->Transition[i][j] * this->Emission[j][observationSequence[k + 1]] * (*Beta)[k + 1][j];
+					for (int j = 0; j < nStates; j++) sum += this->Transition[i][j] * this->Emission[j][observationSequence[k + 1]] * (*Beta)[k + 1][j];
 					(*Beta)[k][i] = sum;
 				}
 		//Termination
 		double sum = 0;
-		for (int i = 0; i < (int)this->States.size(); i++) sum += this->Initial[i] * this->Emission[i][observationSequence[0]] * (*Beta)[0][i];
+		for (int i = 0; i < nStates; i++) sum += this->Initial[i] * this->Emission[i][observationSequence[0]] * (*Beta)[0][i];
 
 		return sum;
 	}
-	vector<string> Posterior(vector<string> observationSequence)
+	char ** Posterior(char ** observationSequence, int nObservationSequence)
 	{
-		vector<string> output; Matrix2D<double> Alpha, Beta;
+		char ** output = (char **)malloc(nObservationSequence * sizeof(char *)); Matrix2D Alpha, Beta;
 		//Initialization
-		double probabilityOfObservationSequence = this->Forward(observationSequence, &Alpha);
-		this->Backward(observationSequence, &Beta);
+		double probabilityOfObservationSequence = Forward(observationSequence, nObservationSequence, &Alpha);
+		Backward(observationSequence, nObservationSequence, &Beta);
 		//Recursion
-		for (int k = 0; k < (int)observationSequence.size(); k++)
+		for (int k = 0; k < nObservationSequence; k++)
 		{
-			double max = 0; string arg;
-			for (int i = 0; i < (int)this->States.size(); i++)
+			double max = 0; char * arg = NULL;
+			for (int i = 0; i < nStates; i++)
 			{
 				double possibleMax = (Alpha[observationSequence[k]][i] * Beta[observationSequence[k]][i]) / probabilityOfObservationSequence;
 				if (possibleMax > max)
 				{
 					max = possibleMax;
-					arg = this->States[i];
+					arg = (char *)realloc(arg, strlen(States[i]) + 1);
+					strcpy(arg, States[i]);
 				}
 			}
-			output.push_back(arg);
+			output[k] = (char *)malloc(strlen(arg) + 1);
+			strcpy(output[k], arg);
+			free(arg);
 		}
-
+		
 		return output;
 	}
-	void BaumWelch(vector<string> observationSequence)
+	void BaumWelch(char ** observationSequence, int nObservationSequence)
 	{
-		Matrix2D<double> Alpha, Beta, Gamma(observationSequence.size(), this->States.size(), observationSequence, this->States); Matrix3D<double> Xi(observationSequence.size(), this->States.size(), this->States.size(), observationSequence, this->States, this->States); double probabilityOfObservationSequence;
+		Matrix2D Alpha, Beta, Gamma = MATRIX2D(nObservationSequence, nStates, observationSequence, States); Matrix3D Xi = MATRIX3D(nObservationSequence, nStates, nStates, observationSequence, States, States); double probabilityOfObservationSequence;
 
 		//Initialization
-		probabilityOfObservationSequence = this->Forward(observationSequence, &Alpha);
+		probabilityOfObservationSequence = Forward(observationSequence, nObservationSequence, &Alpha);
 
-		this->Backward(observationSequence, &Beta);
+		Backward(observationSequence, nObservationSequence, &Beta);
 
-		for (int i = 0; i < (int)this->States.size(); i++)
-			for (int j = 0; j < (int)this->States.size(); j++)
-				for (int k = 0; k < (int)observationSequence.size() - 1; k++)
+		for (int i = 0; i < nStates; i++)
+			for (int j = 0; j < nStates; j++)
+				for (int k = 0; k < nObservationSequence - 1; k++)
 					Xi[k][i][j] = (Alpha[k][i] * Beta[k + 1][j] * this->Transition[i][j] * this->Emission[j][observationSequence[k + 1]]) / probabilityOfObservationSequence;
 
-		for (int k = 0; k < (int)observationSequence.size(); k++)
-			for (int i = 0; i < (int)this->States.size(); i++)
+		for (int k = 0; k < nObservationSequence; k++)
+			for (int i = 0; i < nStates; i++)
 				Gamma[k][i] = (Alpha[k][i] * Beta[k][i]) / probabilityOfObservationSequence;
 
 		//Estimate Initial
 		double sum = 0;
-		for (int i = 0; i < (int)this->States.size(); i++)
+		for (int i = 0; i < nStates; i++)
 			this->Initial[i] = Gamma[0][i];
 
 		//Estimate Transition
-		for (int i = 0; i < (int)this->States.size(); i++)
-			for (int j = 0; j < (int)this->States.size(); j++)
+		for (int i = 0; i < nStates; i++)
+			for (int j = 0; j < nStates; j++)
 			{
 				double sum1 = 0, sum2 = 0;
-				for (int k = 0; k < (int)observationSequence.size() - 1; k++) sum1 += Xi[k][i][j];
-				for (int k = 0; k < (int)observationSequence.size() - 1; k++) sum2 += Gamma[k][i];
+				for (int k = 0; k < nObservationSequence - 1; k++) sum1 += Xi[k][i][j];
+				for (int k = 0; k < nObservationSequence - 1; k++) sum2 += Gamma[k][i];
 				this->Transition[i][j] = sum1 / sum2;
 			}
 
 		//Estimate Emission
-		for (int j = 0; j < (int)this->States.size(); j++)
-			for (int k = 0; k < (int)this->Observations.size(); k++)
+		for (int j = 0; j < nStates; j++)
+			for (int k = 0; k < nObservations; k++)
 			{
 				double sum1 = 0, sum2 = 0;
-				for (int l = 0; l < (int)observationSequence.size(); l++)
+				for (int l = 0; l < nObservationSequence; l++)
 					if (observationSequence[l] == this->Observations[k])
 						sum1 += Gamma[l][j];
-				for (int l = 0; l < (int)observationSequence.size(); l++)
+				for (int l = 0; l < nObservationSequence; l++)
 					sum2 += Gamma[l][j];
 				this->Emission[j][k] = sum1 / sum2;
 			}
-	}
-	//Experimental
-	void GenerateRandomSequence(int numberOfObservations, vector<string> * observationSequence, vector<string> * stateSequence)
-	{
-		int seed = std::chrono::system_clock::now().time_since_epoch().count();
-		mt19937 generator(seed);
-		vector<double> distributionValues;
-
-		for (int k = 0; k < numberOfObservations; k++)
-		{
-			if (k == 0)
-			{
-				distributionValues.clear();
-				for (int i = 0; i < (int)this->States.size(); i++)
-					distributionValues.push_back(this->Initial[this->States[i]]);
-
-				discrete_distribution<int> initialDistributions(distributionValues.begin(), distributionValues.end());
-
-				stateSequence->push_back(this->States[initialDistributions(generator)]);
-
-				distributionValues.clear();
-				for (int i = 0; i < (int)this->Observations.size(); i++)
-					distributionValues.push_back(this->Emission[(*stateSequence)[k]][Observations[i]]);
-
-				discrete_distribution<int> emissionDistributions(distributionValues.begin(), distributionValues.end());
-
-				observationSequence->push_back(this->Observations[emissionDistributions(generator)]);
-			}
-			else
-			{
-				distributionValues.clear();
-				for (int i = 0; i < (int)this->States.size(); i++)
-					distributionValues.push_back(this->Transition[(*stateSequence)[k - 1]][this->States[i]]);
-
-				discrete_distribution<int> transitionDistributions(distributionValues.begin(), distributionValues.end());
-
-				stateSequence->push_back(this->States[transitionDistributions(generator)]);
-
-				distributionValues.clear();
-				for (int i = 0; i < (int)this->Observations.size(); i++)
-					distributionValues.push_back(this->Emission[(*stateSequence)[k]][Observations[i]]);
-
-				discrete_distribution<int> emissionDistributions(distributionValues.begin(), distributionValues.end());
-
-				observationSequence->push_back(this->Observations[emissionDistributions(generator)]);
-			}
-		}
 	}
 	void Normalize(int command)
 	{
 		if(command & HIDDEN_MARKOV_MODEL_INITIAL_MATRIX)
 		{
 			double sum = 0;
-			for (int i = 0; i < (int)this->States.size(); i++)
+			for (int i = 0; i < nStates; i++)
 				sum += this->Initial[this->States[i]];
 
-			for (int i = 0; i < (int)this->States.size(); i++)
+			for (int i = 0; i < nStates; i++)
 				this->Initial[this->States[i]] /= sum;
 		}
 		if(command & HIDDEN_MARKOV_MODEL_EMISSION_MATRIX)
-			for (int i = 0; i < (int)this->States.size(); i++)
+			for (int i = 0; i < nStates; i++)
 			{
 				double sum = 0;
-				for (int j = 0; j < (int)this->Observations.size(); j++)
+				for (int j = 0; j < nObservations; j++)
 					sum += this->Emission[this->States[i]][this->Observations[j]];
-				for (int j = 0; j < (int)this->Observations.size(); j++)
+				for (int j = 0; j < nObservations; j++)
 					this->Emission[this->States[i]][this->Observations[j]] /= sum;
 			}
 		if(command & HIDDEN_MARKOV_MODEL_TRANSITION_MATRIX)
-			for (int i = 0; i < (int)this->States.size(); i++)
+			for (int i = 0; i < nStates; i++)
 			{
 				double sum = 0;
-				for (int j = 0; j < (int)this->States.size(); j++)
+				for (int j = 0; j < nStates; j++)
 					sum += this->Transition[this->States[i]][this->States[j]];
-				for (int j = 0; j < (int)this->States.size(); j++)
+				for (int j = 0; j < nStates; j++)
 					this->Transition[this->States[i]][this->States[j]] /= sum;
 			}
 	}
 
-	Matrix1D<double> Initial;
-	Matrix2D<double> Emission;
-	Matrix2D<double> Transition;
-	vector<string> States;
-	vector<string> Observations;
+	Matrix1D Initial;
+	Matrix2D Emission;
+	Matrix2D Transition;
+
+	char ** States;
+	int nStates;
+	char ** Observations;
+	int nObservations;
 };
 
 #endif
