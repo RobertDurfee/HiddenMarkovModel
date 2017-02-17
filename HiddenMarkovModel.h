@@ -32,6 +32,7 @@ public:
 	Matrix2D Emission;
 	Matrix2D Transition;
 
+private:
 	char ** States;
 	int nStates;
 	char ** Observations;
