@@ -1,5 +1,5 @@
-#ifndef MATRICES_HEADER
-#define MATRICES_HEADER
+#ifndef MATRICES_STRING_VECTOR_HEADER
+#define MATRICES_STRING_VECTOR_HEADER
 
 #include <string.h> //strcpy(), strlen()
 #include <vector>   //vector

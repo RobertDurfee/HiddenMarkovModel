@@ -1,5 +1,5 @@
-#ifndef HIDDEN_MARKOV_MODEL_HEADER
-#define HIDDEN_MARKOV_MODEL_HEADER
+#ifndef HIDDEN_MARKOV_MODEL_STRING_VECTOR_HEADER
+#define HIDDEN_MARKOV_MODEL_STRING_VECTOR_HEADER
 
 #include "Matrices.h" //Matrix1D, Matrix2D, MATRIX1D(), MATRIX2D()
 #include <string>     //string
