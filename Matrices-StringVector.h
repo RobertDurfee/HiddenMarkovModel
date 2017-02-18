@@ -11,20 +11,19 @@ class Matrix
 {
 public:
 	Matrix();
-	Matrix(int size, vector<string> labels);
-	Matrix(int size, vector<T> values, vector<string> labels);
-	Matrix(int size, T value, vector<string> labels);
+	Matrix(vector<string> labels);
+	Matrix(vector<string> labels, vector<T> values);
+	Matrix(vector<string> labels, T value);
 	
-	void Assign(int size, vector<string> labels);
-	void Assign(int size, vector<T> values, vector<string> labels);
-	void Assign(int size, T value, vector<string> labels);
+	void Assign(vector<string> labels);
+	void Assign(vector<string> labels, vector<T> values);
+	void Assign(vector<string> labels, T value);
 	
 	T& operator[](string label);
 	T& operator[](int index);
 	Matrix<T>& operator=(const Matrix<T>& matrix);
 	
 private:
-	int size;
 	vector<string> labels;
 	vector<T> values;
 
@@ -36,9 +35,9 @@ typedef Matrix<double>   Matrix1D;
 typedef Matrix<Matrix1D> Matrix2D;
 typedef Matrix<Matrix2D> Matrix3D;
 
-#define MATRIX1D(X, X_LABELS) (Matrix1D(X, X_LABELS))
-#define MATRIX2D(X, Y, X_LABELS, Y_LABELS) (Matrix2D(X, MATRIX1D(Y, Y_LABELS), X_LABELS))
-#define MATRIX3D(X, Y, Z, X_LABELS, Y_LABELS, Z_LABELS) (Matrix3D(X, MATRIX2D(Y, Z, Y_LABELS, Z_LABELS), X_LABELS))
+#define MATRIX1D(X_LABELS) (Matrix1D(X_LABELS))
+#define MATRIX2D(X_LABELS, Y_LABELS) (Matrix2D(X_LABELS, MATRIX1D(Y_LABELS)))
+#define MATRIX3D(X_LABELS, Y_LABELS, Z_LABELS) (Matrix3D(X_LABELS, MATRIX2D(Y_LABELS, Z_LABELS)))
 
 template<typename T>
 Matrix<T>::Matrix()
@@ -46,43 +45,43 @@ Matrix<T>::Matrix()
 
 }
 template<typename T>
-Matrix<T>::Matrix(int size, vector<string> labels)
+Matrix<T>::Matrix(vector<string> labels)
 {
-	Assign(size, labels);
+	Assign(labels);
 }
 template<typename T>
-Matrix<T>::Matrix(int size, vector<T> values, vector<string> labels)
+Matrix<T>::Matrix(vector<string> labels, vector<T> values)
 {
-	Assign(size, values, labels);
+	Assign(labels, values);
 }
 template<typename T>
-Matrix<T>::Matrix(int size, T value, vector<string> labels)
+Matrix<T>::Matrix(vector<string> labels, T value)
 {
-	Assign(size, value, labels);
+	Assign(labels, value);
 }
 
 template<typename T>
-void Matrix<T>::Assign(int size, vector<string> labels)
+void Matrix<T>::Assign(vector<string> labels)
 {
-	Allocate(size);
+	Allocate((int)labels.size());
 
-	for (int i = 0; i < size; i++)
+	for (int i = 0; i < (int)labels.size(); i++)
 		this->labels[i] = labels[i];
 }
 template<typename T>
-void Matrix<T>::Assign(int size, vector<T> values, vector<string> labels)
+void Matrix<T>::Assign(vector<string> labels, vector<T> values)
 {
-	Assign(size, labels);
+	Assign(labels);
 
-	for (int i = 0; i < size; i++)
+	for (int i = 0; i < (int)values.size(); i++)
 		this->values[i] = values[i];
 }
 template<typename T>
-void Matrix<T>::Assign(int size, T value, vector<string> labels)
+void Matrix<T>::Assign(vector<string> labels, T value)
 {
-	Assign(size, labels);
+	Assign(labels);
 
-	for (int i = 0; i < size; i++)
+	for (int i = 0; i < (int)labels.size(); i++)
 		this->values[i] = value;
 }
 
@@ -94,7 +93,7 @@ T& Matrix<T>::operator[] (string label)
 template<typename T>
 T& Matrix<T>::operator[] (int index)
 {
-	if (index >= 0 && index < size)
+	if (index >= 0 && index < (int)values.size())
 		return values[index];
 	else
 		throw;
@@ -102,15 +101,11 @@ T& Matrix<T>::operator[] (int index)
 template<typename T>
 Matrix<T>& Matrix<T>::operator=(const Matrix<T>& matrix)
 {
-	size = matrix.size;
+	Allocate((int)matrix.labels.size());
 
-	labels = vector<string>(size);
-	values = vector<T>(size);
-
-	for (int i = 0; i < size; i++)
+	for (int i = 0; i < (int)labels.size(); i++)
 	{
 		labels[i] = matrix.labels[i];
-
 		values[i] = matrix.values[i];
 	}
 
@@ -120,7 +115,7 @@ Matrix<T>& Matrix<T>::operator=(const Matrix<T>& matrix)
 template<typename T>
 int Matrix<T>::GetIndexOfLabel(string label)
 {
-	for (int i = 0; i < size; i++)
+	for (int i = 0; i < (int)labels.size(); i++)
 		if (labels[i] == label)
 			return i;
 
@@ -132,8 +127,6 @@ void Matrix<T>::Allocate(int size)
 {
 	values = vector<T>(size);
 	labels = vector<string>(size);
-	
-	this->size = size;
 }
 
 #endif
