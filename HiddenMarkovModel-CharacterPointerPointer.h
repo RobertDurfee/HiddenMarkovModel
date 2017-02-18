@@ -14,6 +14,8 @@ class HiddenMarkovModel
 public:
 	HiddenMarkovModel(char ** states, int nStates, char ** observations, int nObservations);
 
+	~HiddenMarkovModel();
+
 	char ** Viterbi(char ** observationSequence, int nObservationSequence);
 
 	double Forward(char ** observationSequence, int nObservationSequence);
@@ -41,13 +43,36 @@ private:
 
 HiddenMarkovModel::HiddenMarkovModel(char ** states, int nStates, char ** observations, int nObservations)
 {
-	this->States = states;
+	this->States = new char*[nStates];
+	for (int i = 0; i < nStates; i++)
+	{
+		States[i] = new char[strlen(states[i]) + 1];
+		strcpy(States[i], states[i]);
+	}
 	this->nStates = nStates;
-	this->Observations = observations;
+
+	this->Observations = new char*[nObservations];
+	for (int i = 0; i < nObservations; i++)
+	{
+		Observations[i] = new char[strlen(observations[i]) + 1];
+		strcpy(Observations[i], observations[i]);
+	}
 	this->nObservations = nObservations;
+
 	this->Initial = MATRIX1D(nStates, this->States);
 	this->Emission = MATRIX2D(nStates, nObservations, this->States, this->Observations);
 	this->Transition = MATRIX2D(nStates, nStates, this->States, this->States);
+}
+
+HiddenMarkovModel::~HiddenMarkovModel()
+{
+	for (int i = 0; i < nStates; i++)
+		delete[] States[i];
+	delete[] States;
+
+	for (int i = 0; i < nObservations; i++)
+		delete[] Observations[i];
+	delete[] Observations;
 }
 
 char ** HiddenMarkovModel::Viterbi(char ** observationSequence, int nObservationSequence)
