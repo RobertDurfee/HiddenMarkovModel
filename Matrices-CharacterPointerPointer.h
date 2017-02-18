@@ -1,9 +1,9 @@
 #ifndef MATRICES_CHARACTER_POINTER_POINTER_HEADER
 #define MATRICES_CHARACTER_POINTER_POINTER_HEADER
 
-#define _CRT_SECURE_NO_WARNINGS
+#define _CRT_SECURE_NO_WARNINGS //Necessary for use of strcpy()
 
-#include <string.h> //strcpy(), strlen()
+#include <string.h>             //strcpy(), strlen()
 
 template<typename T>
 class Matrix
