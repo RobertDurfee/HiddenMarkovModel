@@ -1,7 +1,10 @@
 #ifndef HIDDEN_MARKOV_MODEL_CHARACTER_POINTER_POINTER_HEADER
 #define HIDDEN_MARKOV_MODEL_CHARACTER_POINTER_POINTER_HEADER
 
+#define _CRT_SECURE_NO_WARNINGS               //Necessary for use of strcpy()
+
 #include "Matrices-CharacterPointerPointer.h" //Matrix1D, Matrix2D, MATRIX1D(), MATRIX2D()
+#include <string.h>                           //strlen(), strcpy()
 
 #define HIDDEN_MARKOV_MODEL_INITIAL_MATRIX 0x1
 #define HIDDEN_MARKOV_MODEL_EMISSION_MATRIX 0x2
