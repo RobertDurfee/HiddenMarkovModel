@@ -12,13 +12,13 @@ public:
 	Matrix();
 	Matrix(int size, char ** labels);
 	Matrix(int size, T * values, char ** labels);
-	Matrix(int size, T & value, char ** labels);
+	Matrix(int size, T value, char ** labels);
 
 	~Matrix();
 
 	void Assign(int size, char ** labels);
 	void Assign(int size, T * values, char ** labels);
-	void Assign(int size, T & value, char ** labels);
+	void Assign(int size, T value, char ** labels);
 	
 	T& operator[](char * label);
 	T& operator[](int index);
@@ -61,7 +61,7 @@ Matrix<T>::Matrix(int size, T * values, char ** labels)
 	Assign(size, values, labels);
 }
 template<typename T>
-Matrix<T>::Matrix(int size, T & value, char ** labels)
+Matrix<T>::Matrix(int size, T value, char ** labels)
 {
 	Zero();
 	Assign(size, value, labels);
@@ -111,7 +111,7 @@ void Matrix<T>::Assign(int size, T * values, char ** labels)
 		*this->values[i] = *values[i];
 }
 template<typename T>
-void Matrix<T>::Assign(int size, T & value, char ** labels)
+void Matrix<T>::Assign(int size, T value, char ** labels)
 {
 	Assign(size, labels);
 
