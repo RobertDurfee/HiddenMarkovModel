@@ -43,14 +43,14 @@ HiddenMarkovModel::HiddenMarkovModel(vector<string> states, vector<string> obser
 {
 	this->States = states;
 	this->Observations = observations;
-	this->Initial = MATRIX1D((int)States.size(), States);
-	this->Emission = MATRIX2D((int)States.size(), (int)Observations.size(), States, Observations);
-	this->Transition = MATRIX2D((int)States.size(), (int)States.size(), States, States);
+	this->Initial = MATRIX1D(States);
+	this->Emission = MATRIX2D(States, Observations);
+	this->Transition = MATRIX2D(States, States);
 }
 
 vector<string> HiddenMarkovModel::Viterbi(vector<string> observationSequence)
 {
-	Matrix2D Delta = MATRIX2D((int)observationSequence.size(), (int)States.size(), observationSequence, States);
+	Matrix2D Delta = MATRIX2D(observationSequence, States);
 
 	for (int k = 0; k < (int)observationSequence.size(); k++)
 		for (int j = 0; j < (int)States.size(); j++)
@@ -105,7 +105,7 @@ double HiddenMarkovModel::Forward(vector<string> observationSequence)
 }
 double HiddenMarkovModel::Forward(vector<string> observationSequence, Matrix2D * Alpha)
 {
-	*Alpha = MATRIX2D((int)observationSequence.size(), (int)States.size(), observationSequence, States);
+	*Alpha = MATRIX2D(observationSequence, States);
 
 	for (int k = 0; k < (int)observationSequence.size(); k++)
 		for (int j = 0; j < (int)States.size(); j++)
@@ -136,7 +136,7 @@ double HiddenMarkovModel::Backward(vector<string> observationSequence)
 }
 double HiddenMarkovModel::Backward(vector<string> observationSequence, Matrix2D * Beta)
 {
-	*Beta = MATRIX2D((int)observationSequence.size(), (int)States.size(), observationSequence, States);
+	*Beta = MATRIX2D(observationSequence, States);
 
 	for (int k = (int)observationSequence.size() - 1; k >= 0; k--)
 		for (int i = 0; i < (int)States.size(); i++)
@@ -186,7 +186,7 @@ vector<string> HiddenMarkovModel::Posterior(vector<string> observationSequence)
 
 void HiddenMarkovModel::BaumWelch(vector<string> observationSequence)
 {
-	Matrix2D Alpha, Beta, Gamma = MATRIX2D((int)observationSequence.size(), (int)States.size(), observationSequence, States); Matrix3D Xi = MATRIX3D((int)observationSequence.size(), (int)States.size(), (int)States.size(), observationSequence, States, States); double probabilityOfObservationSequence;
+	Matrix2D Alpha, Beta, Gamma = MATRIX2D(observationSequence, States); Matrix3D Xi = MATRIX3D(observationSequence, States, States); double probabilityOfObservationSequence;
 
 	//Initialization
 	probabilityOfObservationSequence = Forward(observationSequence, &Alpha);
