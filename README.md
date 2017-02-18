@@ -56,7 +56,7 @@ This method takes a sequence of observations and adjusts the initial, emission, 
 ```C++
 void Normalize(int command);
 ```
-After the `BaumWelch` method is called, the matrices may no be 'normalized' in the sense that all columns add up to 100%. This method can be called to garuntee that the columns add up to 100%. The `command` can be any combination of the three constants `HIDDEN_MARKOV_MODEL_INITIAL_MATRIX`, `HIDDEN_MARKOV_MODEL_EMISSION_MATRIX`, and `HIDDEN_MARKOV_MODEL_TRANSITION_MATRIX`. Do normalize more than one matrix at a time, perform a bitwise OR on the constants.
+After the `BaumWelch` method is called, the matrices may no be 'normalized' in the sense that all columns add up to 100%. This method can be called to garuntee that the columns add up to 100%. The `command` can be any combination of the three constants `HIDDEN_MARKOV_MODEL_INITIAL_MATRIX`, `HIDDEN_MARKOV_MODEL_EMISSION_MATRIX`, and `HIDDEN_MARKOV_MODEL_TRANSITION_MATRIX`. To normalize more than one matrix at a time, perform a bitwise `OR` on the constants.
 
 ### Matrices
 ```C++
