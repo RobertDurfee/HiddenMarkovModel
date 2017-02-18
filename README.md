@@ -74,4 +74,35 @@ A deconstructor is only needed for the pointer to a pointer of characters implem
 
 ### Example
 ```C++
+#include "HiddenMarkovModel-StringVector.h"
+
+int main()
+{
+	vector<string> States = { "Healthy", "Fever" };
+	vector<string> Observations = { "Dizzy", "Cold", "Normal" };
+
+	HiddenMarkovModel illnessDiagnosis(States, Observations);
+
+	illnessDiagnosis.Initial["Healthy"] = 0.6;
+	illnessDiagnosis.Initial["Fever"] = 0.4;
+
+	illnessDiagnosis.Transition["Healthy"]["Healthy"] = 0.7;
+	illnessDiagnosis.Transition["Healthy"]["Fever"] = 0.3;
+	illnessDiagnosis.Transition["Fever"]["Healthy"] = 0.4;
+	illnessDiagnosis.Transition["Fever"]["Fever"] = 0.6;
+
+	illnessDiagnosis.Emission["Healthy"]["Normal"] = 0.5;
+	illnessDiagnosis.Emission["Healthy"]["Cold"] = 0.4;
+	illnessDiagnosis.Emission["Healthy"]["Dizzy"] = 0.1;
+	illnessDiagnosis.Emission["Fever"]["Normal"] = 0.1;
+	illnessDiagnosis.Emission["Fever"]["Cold"] = 0.3;
+	illnessDiagnosis.Emission["Fever"]["Dizzy"] = 0.6;
+
+	vector<string> ObservationSequence = { "Normal", "Cold", "Dizzy" };
+
+	vector<string> StateSequence = illnessDiagnosis.Viterbi(ObservationSequence);
+
+	return 0;
+}
 ```
+This example is copied from Wikipedia's page on the [Viterbi algorithm](https://en.wikipedia.org/wiki/Viterbi_algorithm). The states represent a person's diagnosis: healthy or fever. Their symptoms can be normal, dizzy, or cold. Using the probabilities given by Wikipedia, the initial, emission, and transision matrices are initialized. The observation sequence represents how the person felt on three different days. Using the Viterbi algorithm, the most probable sequence of states, or the diagnosis for the day, is generated.
