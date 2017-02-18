@@ -1,7 +1,7 @@
 #ifndef HIDDEN_MARKOV_MODEL_STRING_VECTOR_HEADER
 #define HIDDEN_MARKOV_MODEL_STRING_VECTOR_HEADER
 
-#include "Matrices.h" //Matrix1D, Matrix2D, MATRIX1D(), MATRIX2D()
+#include "Matrices-StringVector.h" //Matrix1D, Matrix2D, MATRIX1D(), MATRIX2D()
 #include <string>     //string
 #include <vector>     //vector
 
