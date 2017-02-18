@@ -1,7 +1,7 @@
 #ifndef MATRICES_CHARACTER_POINTER_POINTER_HEADER
 #define MATRICES_CHARACTER_POINTER_POINTER_HEADER
 
-#define _CRT_SECURE_NO_WARNINGS //Necessary for use of strcpy()
+#define _CRT_SECURE_NO_WARNINGS //Necessary for strcpy()
 
 #include <string.h>             //strcpy(), strlen()
 
@@ -11,14 +11,14 @@ class Matrix
 public:
 	Matrix();
 	Matrix(int size, char ** labels);
-	Matrix(int size, T * values, char ** labels);
-	Matrix(int size, T value, char ** labels);
+	Matrix(int size, char ** labels, T * values);
+	Matrix(int size, char ** labels, T value);
 
 	~Matrix();
 
 	void Assign(int size, char ** labels);
-	void Assign(int size, T * values, char ** labels);
-	void Assign(int size, T value, char ** labels);
+	void Assign(int size, char ** labels, T * values);
+	void Assign(int size, char ** labels, T value);
 	
 	T& operator[](char * label);
 	T& operator[](int index);
@@ -40,8 +40,8 @@ typedef Matrix<Matrix1D> Matrix2D;
 typedef Matrix<Matrix2D> Matrix3D;
 
 #define MATRIX1D(X, X_LABELS) (Matrix1D(X, X_LABELS))
-#define MATRIX2D(X, Y, X_LABELS, Y_LABELS) (Matrix2D(X, MATRIX1D(Y, Y_LABELS), X_LABELS))
-#define MATRIX3D(X, Y, Z, X_LABELS, Y_LABELS, Z_LABELS) (Matrix3D(X, MATRIX2D(Y, Z, Y_LABELS, Z_LABELS), X_LABELS))
+#define MATRIX2D(X, Y, X_LABELS, Y_LABELS) (Matrix2D(X, X_LABELS, MATRIX1D(Y, Y_LABELS)))
+#define MATRIX3D(X, Y, Z, X_LABELS, Y_LABELS, Z_LABELS) (Matrix3D(X, X_LABELS, MATRIX2D(Y, Z, Y_LABELS, Z_LABELS)))
 
 template<typename T>
 Matrix<T>::Matrix()
@@ -55,16 +55,16 @@ Matrix<T>::Matrix(int size, char ** labels)
 	Assign(size, labels);
 }
 template<typename T>
-Matrix<T>::Matrix(int size, T * values, char ** labels)
+Matrix<T>::Matrix(int size, char ** labels, T * values)
 {
 	Zero();
-	Assign(size, values, labels);
+	Assign(size, labels, values);
 }
 template<typename T>
-Matrix<T>::Matrix(int size, T value, char ** labels)
+Matrix<T>::Matrix(int size, char ** labels, T value)
 {
 	Zero();
-	Assign(size, value, labels);
+	Assign(size, labels, value);
 }
 
 template<typename T>
@@ -103,7 +103,7 @@ void Matrix<T>::Assign(int size, char ** labels)
 	}
 }
 template<typename T>
-void Matrix<T>::Assign(int size, T * values, char ** labels)
+void Matrix<T>::Assign(int size, char ** labels, T * values)
 {
 	Assign(size, labels);
 
@@ -111,7 +111,7 @@ void Matrix<T>::Assign(int size, T * values, char ** labels)
 		*this->values[i] = *values[i];
 }
 template<typename T>
-void Matrix<T>::Assign(int size, T value, char ** labels)
+void Matrix<T>::Assign(int size, char ** labels, T value)
 {
 	Assign(size, labels);
 
