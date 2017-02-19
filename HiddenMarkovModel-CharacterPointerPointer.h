@@ -46,7 +46,7 @@ private:
 
 HiddenMarkovModel::HiddenMarkovModel(char ** states, int nStates, char ** observations, int nObservations)
 {
-	this->States = new char*[nStates];
+	States = new char*[nStates];
 	for (int i = 0; i < nStates; i++)
 	{
 		States[i] = new char[strlen(states[i]) + 1];
@@ -54,7 +54,7 @@ HiddenMarkovModel::HiddenMarkovModel(char ** states, int nStates, char ** observ
 	}
 	this->nStates = nStates;
 
-	this->Observations = new char*[nObservations];
+	Observations = new char*[nObservations];
 	for (int i = 0; i < nObservations; i++)
 	{
 		Observations[i] = new char[strlen(observations[i]) + 1];
@@ -62,9 +62,9 @@ HiddenMarkovModel::HiddenMarkovModel(char ** states, int nStates, char ** observ
 	}
 	this->nObservations = nObservations;
 
-	this->Initial = MATRIX1D(nStates, this->States);
-	this->Emission = MATRIX2D(nStates, nObservations, this->States, this->Observations);
-	this->Transition = MATRIX2D(nStates, nStates, this->States, this->States);
+	Initial = MATRIX1D(nStates, States);
+	Emission = MATRIX2D(nStates, nObservations, States, Observations);
+	Transition = MATRIX2D(nStates, nStates, States, States);
 }
 
 HiddenMarkovModel::~HiddenMarkovModel()
@@ -86,18 +86,18 @@ char ** HiddenMarkovModel::Viterbi(char ** observationSequence, int nObservation
 		for (int j = 0; j < nStates; j++)
 			//Initialization
 			if (k == 0)
-				Delta[k][j] = this->Initial[j] * this->Emission[j][observationSequence[k]];
+				Delta[k][j] = Initial[j] * Emission[j][observationSequence[k]];
 			//Recursion
 			else
 			{
 				double max = 0;
 				for (int i = 0; i < nStates; i++)
 				{
-					double possibleMax = Delta[k - 1][i] * this->Transition[i][j];
+					double possibleMax = Delta[k - 1][i] * Transition[i][j];
 					if (possibleMax > max)
 						max = possibleMax;
 				}
-				Delta[k][j] = max * this->Emission[j][observationSequence[k]];
+				Delta[k][j] = max * Emission[j][observationSequence[k]];
 			}
 	//Termination
 	double max = 0; char ** q = new char*[nObservationSequence]; memset(q, NULL, nObservationSequence * sizeof(char *));
@@ -115,7 +115,7 @@ char ** HiddenMarkovModel::Viterbi(char ** observationSequence, int nObservation
 		double max = 0;
 		for (int i = 0; i < nStates; i++)
 		{
-			double possibleMax = Delta[k][i] * this->Transition[i][q[k + 1]];
+			double possibleMax = Delta[k][i] * Transition[i][q[k + 1]];
 			if (possibleMax > max)
 			{
 				max = possibleMax;
@@ -145,13 +145,13 @@ double HiddenMarkovModel::Forward(char ** observationSequence, int nObservationS
 		for (int j = 0; j < nStates; j++)
 			//Initialization
 			if (k == 0)
-				(*Alpha)[k][j] = this->Initial[j] * this->Emission[j][observationSequence[k]];
+				(*Alpha)[k][j] = Initial[j] * Emission[j][observationSequence[k]];
 			//Recursion
 			else
 			{
 				double sum = 0;
-				for (int i = 0; i < nStates; i++)	sum += (*Alpha)[k - 1][i] * this->Transition[i][j];
-				(*Alpha)[k][j] = sum * this->Emission[j][observationSequence[k]];
+				for (int i = 0; i < nStates; i++) sum += (*Alpha)[k - 1][i] * Transition[i][j];
+				(*Alpha)[k][j] = sum * Emission[j][observationSequence[k]];
 			}
 	//Termination
 	double sum = 0;
@@ -181,12 +181,12 @@ double HiddenMarkovModel::Backward(char ** observationSequence, int nObservation
 			else
 			{
 				double sum = 0;
-				for (int j = 0; j < nStates; j++) sum += this->Transition[i][j] * this->Emission[j][observationSequence[k + 1]] * (*Beta)[k + 1][j];
+				for (int j = 0; j < nStates; j++) sum += Transition[i][j] * Emission[j][observationSequence[k + 1]] * (*Beta)[k + 1][j];
 				(*Beta)[k][i] = sum;
 			}
 	//Termination
 	double sum = 0;
-	for (int i = 0; i < nStates; i++) sum += this->Initial[i] * this->Emission[i][observationSequence[0]] * (*Beta)[0][i];
+	for (int i = 0; i < nStates; i++) sum += Initial[i] * Emission[i][observationSequence[0]] * (*Beta)[0][i];
 
 	return sum;
 }
@@ -234,7 +234,7 @@ void HiddenMarkovModel::BaumWelch(char ** observationSequence, int nObservationS
 	for (int i = 0; i < nStates; i++)
 		for (int j = 0; j < nStates; j++)
 			for (int k = 0; k < nObservationSequence - 1; k++)
-				Xi[k][i][j] = (Alpha[k][i] * Beta[k + 1][j] * this->Transition[i][j] * this->Emission[j][observationSequence[k + 1]]) / probabilityOfObservationSequence;
+				Xi[k][i][j] = (Alpha[k][i] * Beta[k + 1][j] * Transition[i][j] * Emission[j][observationSequence[k + 1]]) / probabilityOfObservationSequence;
 
 	for (int k = 0; k < nObservationSequence; k++)
 		for (int i = 0; i < nStates; i++)
@@ -243,7 +243,7 @@ void HiddenMarkovModel::BaumWelch(char ** observationSequence, int nObservationS
 	//Estimate Initial
 	double sum = 0;
 	for (int i = 0; i < nStates; i++)
-		this->Initial[i] = Gamma[0][i];
+		Initial[i] = Gamma[0][i];
 
 	//Estimate Transition
 	for (int i = 0; i < nStates; i++)
@@ -252,7 +252,7 @@ void HiddenMarkovModel::BaumWelch(char ** observationSequence, int nObservationS
 			double sum1 = 0, sum2 = 0;
 			for (int k = 0; k < nObservationSequence - 1; k++) sum1 += Xi[k][i][j];
 			for (int k = 0; k < nObservationSequence - 1; k++) sum2 += Gamma[k][i];
-			this->Transition[i][j] = sum1 / sum2;
+			Transition[i][j] = sum1 / sum2;
 		}
 
 	//Estimate Emission
@@ -261,11 +261,11 @@ void HiddenMarkovModel::BaumWelch(char ** observationSequence, int nObservationS
 		{
 			double sum1 = 0, sum2 = 0;
 			for (int l = 0; l < nObservationSequence; l++)
-				if (observationSequence[l] == this->Observations[k])
+				if (observationSequence[l] == Observations[k])
 					sum1 += Gamma[l][j];
 			for (int l = 0; l < nObservationSequence; l++)
 				sum2 += Gamma[l][j];
-			this->Emission[j][k] = sum1 / sum2;
+			Emission[j][k] = sum1 / sum2;
 		}
 }
 
@@ -275,28 +275,28 @@ void HiddenMarkovModel::Normalize(int command)
 	{
 		double sum = 0;
 		for (int i = 0; i < nStates; i++)
-			sum += this->Initial[this->States[i]];
+			sum += Initial[States[i]];
 
 		for (int i = 0; i < nStates; i++)
-			this->Initial[this->States[i]] /= sum;
+			Initial[States[i]] /= sum;
 	}
 	if (command & HIDDEN_MARKOV_MODEL_EMISSION_MATRIX)
 		for (int i = 0; i < nStates; i++)
 		{
 			double sum = 0;
 			for (int j = 0; j < nObservations; j++)
-				sum += this->Emission[this->States[i]][this->Observations[j]];
+				sum += Emission[States[i]][Observations[j]];
 			for (int j = 0; j < nObservations; j++)
-				this->Emission[this->States[i]][this->Observations[j]] /= sum;
+				Emission[States[i]][Observations[j]] /= sum;
 		}
 	if (command & HIDDEN_MARKOV_MODEL_TRANSITION_MATRIX)
 		for (int i = 0; i < nStates; i++)
 		{
 			double sum = 0;
 			for (int j = 0; j < nStates; j++)
-				sum += this->Transition[this->States[i]][this->States[j]];
+				sum += Transition[States[i]][States[j]];
 			for (int j = 0; j < nStates; j++)
-				this->Transition[this->States[i]][this->States[j]] /= sum;
+				Transition[States[i]][States[j]] /= sum;
 		}
 }
 
