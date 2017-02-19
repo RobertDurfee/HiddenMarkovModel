@@ -111,13 +111,13 @@ double HiddenMarkovModel::Forward(vector<string> observationSequence, Matrix2D *
 		for (int j = 0; j < (int)States.size(); j++)
 			//Initialization
 			if (k == 0)
-				(*Alpha)[k][j] = this->Initial[j] * this->Emission[j][observationSequence[k]];
+				(*Alpha)[k][j] = Initial[j] * Emission[j][observationSequence[k]];
 			//Recursion
 			else
 			{
 				double sum = 0;
-				for (int i = 0; i < (int)States.size(); i++)	sum += (*Alpha)[k - 1][i] * this->Transition[i][j];
-				(*Alpha)[k][j] = sum * this->Emission[j][observationSequence[k]];
+				for (int i = 0; i < (int)States.size(); i++)	sum += (*Alpha)[k - 1][i] * Transition[i][j];
+				(*Alpha)[k][j] = sum * Emission[j][observationSequence[k]];
 			}
 	//Termination
 	double sum = 0;
@@ -147,12 +147,12 @@ double HiddenMarkovModel::Backward(vector<string> observationSequence, Matrix2D 
 			else
 			{
 				double sum = 0;
-				for (int j = 0; j < (int)States.size(); j++) sum += this->Transition[i][j] * this->Emission[j][observationSequence[k + 1]] * (*Beta)[k + 1][j];
+				for (int j = 0; j < (int)States.size(); j++) sum += Transition[i][j] * Emission[j][observationSequence[k + 1]] * (*Beta)[k + 1][j];
 				(*Beta)[k][i] = sum;
 			}
 	//Termination
 	double sum = 0;
-	for (int i = 0; i < (int)States.size(); i++) sum += this->Initial[i] * this->Emission[i][observationSequence[0]] * (*Beta)[0][i];
+	for (int i = 0; i < (int)States.size(); i++) sum += Initial[i] * Emission[i][observationSequence[0]] * (*Beta)[0][i];
 
 	return sum;
 }
@@ -196,7 +196,7 @@ void HiddenMarkovModel::BaumWelch(vector<string> observationSequence)
 	for (int i = 0; i < (int)States.size(); i++)
 		for (int j = 0; j < (int)States.size(); j++)
 			for (int k = 0; k < (int)observationSequence.size() - 1; k++)
-				Xi[k][i][j] = (Alpha[k][i] * Beta[k + 1][j] * this->Transition[i][j] * this->Emission[j][observationSequence[k + 1]]) / probabilityOfObservationSequence;
+				Xi[k][i][j] = (Alpha[k][i] * Beta[k + 1][j] * Transition[i][j] * Emission[j][observationSequence[k + 1]]) / probabilityOfObservationSequence;
 
 	for (int k = 0; k < (int)observationSequence.size(); k++)
 		for (int i = 0; i < (int)States.size(); i++)
@@ -205,7 +205,7 @@ void HiddenMarkovModel::BaumWelch(vector<string> observationSequence)
 	//Estimate Initial
 	double sum = 0;
 	for (int i = 0; i < (int)States.size(); i++)
-		this->Initial[i] = Gamma[0][i];
+		Initial[i] = Gamma[0][i];
 
 	//Estimate Transition
 	for (int i = 0; i < (int)States.size(); i++)
@@ -214,7 +214,7 @@ void HiddenMarkovModel::BaumWelch(vector<string> observationSequence)
 			double sum1 = 0, sum2 = 0;
 			for (int k = 0; k < (int)observationSequence.size() - 1; k++) sum1 += Xi[k][i][j];
 			for (int k = 0; k < (int)observationSequence.size() - 1; k++) sum2 += Gamma[k][i];
-			this->Transition[i][j] = sum1 / sum2;
+			Transition[i][j] = sum1 / sum2;
 		}
 
 	//Estimate Emission
@@ -223,11 +223,11 @@ void HiddenMarkovModel::BaumWelch(vector<string> observationSequence)
 		{
 			double sum1 = 0, sum2 = 0;
 			for (int l = 0; l < (int)observationSequence.size(); l++)
-				if (observationSequence[l] == this->Observations[k])
+				if (observationSequence[l] == Observations[k])
 					sum1 += Gamma[l][j];
 			for (int l = 0; l < (int)observationSequence.size(); l++)
 				sum2 += Gamma[l][j];
-			this->Emission[j][k] = sum1 / sum2;
+			Emission[j][k] = sum1 / sum2;
 		}
 }
 
@@ -237,28 +237,28 @@ void HiddenMarkovModel::Normalize(int command)
 	{
 		double sum = 0;
 		for (int i = 0; i < (int)States.size(); i++)
-			sum += this->Initial[this->States[i]];
+			sum += Initial[States[i]];
 
 		for (int i = 0; i < (int)States.size(); i++)
-			this->Initial[this->States[i]] /= sum;
+			Initial[States[i]] /= sum;
 	}
 	if (command & HIDDEN_MARKOV_MODEL_EMISSION_MATRIX)
 		for (int i = 0; i < (int)States.size(); i++)
 		{
 			double sum = 0;
 			for (int j = 0; j < (int)Observations.size(); j++)
-				sum += this->Emission[this->States[i]][this->Observations[j]];
+				sum += Emission[States[i]][Observations[j]];
 			for (int j = 0; j < (int)Observations.size(); j++)
-				this->Emission[this->States[i]][this->Observations[j]] /= sum;
+				Emission[States[i]][Observations[j]] /= sum;
 		}
 	if (command & HIDDEN_MARKOV_MODEL_TRANSITION_MATRIX)
 		for (int i = 0; i < (int)States.size(); i++)
 		{
 			double sum = 0;
 			for (int j = 0; j < (int)States.size(); j++)
-				sum += this->Transition[this->States[i]][this->States[j]];
+				sum += Transition[States[i]][States[j]];
 			for (int j = 0; j < (int)States.size(); j++)
-				this->Transition[this->States[i]][this->States[j]] /= sum;
+				Transition[States[i]][States[j]] /= sum;
 		}
 }
 
