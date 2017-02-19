@@ -41,11 +41,11 @@ private:
 
 HiddenMarkovModel::HiddenMarkovModel(vector<string> states, vector<string> observations)
 {
-	this->States = states;
-	this->Observations = observations;
-	this->Initial = MATRIX1D(States);
-	this->Emission = MATRIX2D(States, Observations);
-	this->Transition = MATRIX2D(States, States);
+	States = states;
+	Observations = observations;
+	Initial = MATRIX1D(States);
+	Emission = MATRIX2D(States, Observations);
+	Transition = MATRIX2D(States, States);
 }
 
 vector<string> HiddenMarkovModel::Viterbi(vector<string> observationSequence)
@@ -56,18 +56,18 @@ vector<string> HiddenMarkovModel::Viterbi(vector<string> observationSequence)
 		for (int j = 0; j < (int)States.size(); j++)
 			//Initialization
 			if (k == 0)
-				Delta[k][j] = this->Initial[j] * this->Emission[j][observationSequence[k]];
+				Delta[k][j] = Initial[j] * Emission[j][observationSequence[k]];
 			//Recursion
 			else
 			{
 				double max = 0;
 				for (int i = 0; i < (int)States.size(); i++)
 				{
-					double possibleMax = Delta[k - 1][i] * this->Transition[i][j];
+					double possibleMax = Delta[k - 1][i] * Transition[i][j];
 					if (possibleMax > max)
 						max = possibleMax;
 				}
-				Delta[k][j] = max * this->Emission[j][observationSequence[k]];
+				Delta[k][j] = max * Emission[j][observationSequence[k]];
 			}
 	//Termination
 	double max = 0; vector<string> q((int)observationSequence.size());
@@ -83,7 +83,7 @@ vector<string> HiddenMarkovModel::Viterbi(vector<string> observationSequence)
 		double max = 0;
 		for (int i = 0; i < (int)States.size(); i++)
 		{
-			double possibleMax = Delta[k][i] * this->Transition[i][q[k + 1]];
+			double possibleMax = Delta[k][i] * Transition[i][q[k + 1]];
 			if (possibleMax > max)
 			{
 				max = possibleMax;
